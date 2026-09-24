@@ -84,20 +84,43 @@ def process_inbox(
     return summary
 
 
+def build_graph_client(settings: Settings):
+    from .graph_client import (
+        GraphClient,
+        TokenCacheStore,
+        app_only_token_provider,
+        delegated_token_provider,
+    )
+
+    if settings.graph_auth_mode == "app":
+        provider = app_only_token_provider(
+            settings.graph_client_id, settings.graph_tenant_id, settings.graph_client_secret
+        )
+    else:
+        provider = delegated_token_provider(
+            settings.graph_client_id,
+            settings.graph_tenant_id or "organizations",
+            TokenCacheStore(settings.graph_token_cache_path, settings.graph_token_cache_b64),
+        )
+    return GraphClient(provider)
+
+
 def build_calendar(settings: Settings) -> Calendar:
     if settings.calendar_backend == "graph":
-        from .calendar.graph import GraphCalendar, TokenCacheStore
+        from .calendar.graph import GraphCalendar
 
-        return GraphCalendar(
-            client_id=settings.graph_client_id,
-            tenant_id=settings.graph_tenant_id,
-            cache_store=TokenCacheStore(settings.graph_token_cache_path, settings.graph_token_cache_b64),
-            timezone=settings.timezone,
-        )
+        user_path = f"/users/{settings.owner_email}" if settings.graph_auth_mode == "app" else "/me"
+        return GraphCalendar(build_graph_client(settings), user_path=user_path, timezone=settings.timezone)
     return MockCalendar(settings.mock_calendar_path)
 
 
-def build_email(settings: Settings) -> ImapSmtpEmailProvider:
+def build_email(settings: Settings) -> EmailProvider:
+    if settings.email_backend == "graph":
+        if settings.graph_auth_mode != "app":
+            raise ValueError("EMAIL_BACKEND=graph requires GRAPH_AUTH_MODE=app (client credentials)")
+        from .graph_mail import GraphMailProvider
+
+        return GraphMailProvider(build_graph_client(settings), mailbox=settings.agent_email)
     return ImapSmtpEmailProvider(
         address=settings.agent_email,
         password=settings.email_password,

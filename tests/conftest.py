@@ -14,6 +14,7 @@ from scheduling_agent.models import CalendarEvent, EmailMessage, EmailThread
 TZ = ZoneInfo("America/New_York")
 OWNER = "owner@firm.com"
 AGENT = "scheduler@gmail.com"
+AGENT_M365 = "scheduler@firm.com"
 GUEST = "guest@partner.com"
 
 # A Monday at 10:00 ET

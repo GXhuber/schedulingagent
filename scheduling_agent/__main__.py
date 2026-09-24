@@ -21,14 +21,14 @@ def cmd_run_once(_: argparse.Namespace) -> int:
 
 
 def cmd_auth_graph(_: argparse.Namespace) -> int:
-    from .calendar.graph import TokenCacheStore, device_code_login
+    from .graph_client import TokenCacheStore, device_code_login
 
     s = Settings.from_env()
     if not s.graph_client_id:
         print("GRAPH_CLIENT_ID is not set", file=sys.stderr)
         return 2
     store = TokenCacheStore(s.graph_token_cache_path)
-    user = device_code_login(s.graph_client_id, s.graph_tenant_id, store)
+    user = device_code_login(s.graph_client_id, s.graph_tenant_id or "organizations", store)
     print(f"Signed in as {user}. Token cache written to {store.path}.")
     print("For serverless: base64-encode that file into GRAPH_TOKEN_CACHE_B64 (keep it secret).")
     return 0

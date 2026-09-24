@@ -29,13 +29,16 @@ class Settings:
     agent_name: str
     agent_email: str
 
+    email_backend: str  # "graph" | "imap"
     imap_host: str
     imap_port: int
     smtp_host: str
     smtp_port: int
     email_password: str
 
+    graph_auth_mode: str  # "app" | "delegated"
     graph_client_id: str
+    graph_client_secret: str
     graph_tenant_id: str
     graph_token_cache_path: str
     graph_token_cache_b64: str
@@ -67,13 +70,16 @@ class Settings:
             owner_email=os.environ.get("OWNER_EMAIL", "").lower(),
             agent_name=os.environ.get("AGENT_NAME", "Scheduling Assistant"),
             agent_email=os.environ.get("AGENT_EMAIL", "").lower(),
+            email_backend=os.environ.get("EMAIL_BACKEND", "graph").lower(),
             imap_host=os.environ.get("IMAP_HOST", "imap.gmail.com"),
             imap_port=_env_int("IMAP_PORT", 993),
             smtp_host=os.environ.get("SMTP_HOST", "smtp.gmail.com"),
             smtp_port=_env_int("SMTP_PORT", 465),
             email_password=os.environ.get("EMAIL_PASSWORD", ""),
+            graph_auth_mode=os.environ.get("GRAPH_AUTH_MODE", "app").lower(),
             graph_client_id=os.environ.get("GRAPH_CLIENT_ID", ""),
-            graph_tenant_id=os.environ.get("GRAPH_TENANT_ID", "organizations"),
+            graph_client_secret=os.environ.get("GRAPH_CLIENT_SECRET", ""),
+            graph_tenant_id=os.environ.get("GRAPH_TENANT_ID", ""),
             graph_token_cache_path=os.environ.get("GRAPH_TOKEN_CACHE_PATH", "graph_token_cache.json"),
             graph_token_cache_b64=os.environ.get("GRAPH_TOKEN_CACHE_B64", ""),
             calendar_backend=os.environ.get("CALENDAR_BACKEND", "mock").lower(),

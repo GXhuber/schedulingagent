@@ -28,6 +28,8 @@ class EmailProvider(Protocol):
 
     def mark_processed(self, thread: EmailThread, *, failed: bool = False) -> None: ...
 
+    def close(self) -> None: ...
+
 
 def parse_addresses(raw: str | None) -> tuple[str, ...]:
     if not raw:
@@ -49,11 +51,15 @@ def extract_body(msg: email.message.Message) -> str:
     if plain:
         return plain.strip()
     if markup:
-        text = re.sub(r"(?is)<(script|style).*?</\1>", "", markup)
-        text = re.sub(r"(?i)<br\s*/?>|</p>|</div>", "\n", text)
-        text = _TAG_RE.sub("", text)
-        return _WS_RE.sub("\n\n", html.unescape(text)).strip()
+        return html_to_text(markup)
     return ""
+
+
+def html_to_text(markup: str) -> str:
+    text = re.sub(r"(?is)<(script|style).*?</\1>", "", markup)
+    text = re.sub(r"(?i)<br\s*/?>|</p>|</div>", "\n", text)
+    text = _TAG_RE.sub("", text)
+    return _WS_RE.sub("\n\n", html.unescape(text)).strip()
 
 
 def _decode(part: email.message.Message) -> str:
@@ -265,3 +271,6 @@ class InMemoryEmailProvider:
     def mark_processed(self, thread: EmailThread, *, failed: bool = False) -> None:
         self.processed.append((thread.thread_id, failed))
         self.threads = [t for t in self.threads if t.thread_id != thread.thread_id]
+
+    def close(self) -> None:
+        return None
